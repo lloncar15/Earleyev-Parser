@@ -24,17 +24,18 @@ void EarleyParser::buildItems(Grammar& grammar)
 	std::string startVariable = grammar.getStartVariable();
 	for (auto& rule : grammar.getRules()) {
 		if (rule.first == startVariable) {
-			addEarleyItemIfDoesntExist(EarleyItem(startVariable, rule.second, 0, 0), m_state[0]);
+			addEarleyItemIfDoesntExist(EarleyItem(startVariable, rule.second, 0, 0), 0);
 		}
 	}
 
 	// populate other state sets
-	/*
-	for (int i = 0; i <= m_state.size(); ++i) {
+	
+	for (int i = 0; i < m_state.size(); ++i) {
 		auto& tempStateSet = m_state[i];
-		for (int j = 0; j <= m_state[i].size(); ++j) {
+		for (int j = 0; j < m_state[i].size(); ++j) {
 			auto& tempEarleyItem = m_state[i][j];
 			int dotIndex = tempEarleyItem.getParsedSymbols();
+			int startIndex = tempEarleyItem.getStart();
 			auto& tempSymbols = tempEarleyItem.getSymbols();
 
 			auto it = tempSymbols.begin() + dotIndex;
@@ -56,14 +57,14 @@ void EarleyParser::buildItems(Grammar& grammar)
 				}
 			}
 		}
-	}*/
+	}
 }
 
 void EarleyParser::predict(std::vector<EarleyItem>& stateSet, int stateSetIndex, std::string& symbol, Grammar& grammar)
 {
 	for (auto& rule : grammar.getRules()) {
 		if (symbol == rule.first) {
-			addEarleyItemIfDoesntExist(EarleyItem(symbol, rule.second, stateSetIndex, 0), stateSet);
+			addEarleyItemIfDoesntExist(EarleyItem(symbol, rule.second, stateSetIndex, 0), stateSetIndex);
 		}
 	}
 }
@@ -74,23 +75,43 @@ void EarleyParser::scan(std::vector<EarleyItem>& stateSet, int stateSetIndex, in
 		return;
 	}
 	else {
+		std::string inputSymbol;
+		inputSymbol = input.at(stateSetIndex);
+
+		// don't do anything if the symbol doesn't match
+		if (symbol != inputSymbol) {
+			return;
+		}
+
 		// stateSet exists and just add the item there
 		auto& tempItem = stateSet[desiredStateSetIndex];
 		EarleyItem item = EarleyItem(tempItem.getVariable(), tempItem.getSymbols(), tempItem.getStart(), tempItem.getParsedSymbols() + 1);
-		if (stateSetIndex + 1 < m_state.size()) {
-			m_state[stateSetIndex + 1].emplace_back(item);
-		}
-		else {
-			// add the stateSet and then add the item there
-			std::vector<EarleyItem> vector = { item };
-			m_state.emplace_back(vector);
-		}
+		addEarleyItemIfDoesntExist(item, stateSetIndex + 1);
 	}
 }
 
 void EarleyParser::complete(std::vector<EarleyItem>& stateSet, int stateSetIndex, int desiredStateSetIndex, Grammar& grammar)
 {
-	EarleyItem item = stateSet[desiredStateSetIndex];
+	EarleyItem tempItem = stateSet[desiredStateSetIndex];
+	auto& tempStateSet = m_state[tempItem.getStart()];
+
+	// get the symbol to the left of the dot
+	std::string desiredSymbol = tempItem.getVariable();
+
+	// check EarleyItems in the desired stateSet
+	for (auto& item : tempStateSet) {
+		auto& symbols = item.getSymbols();
+		int itemParsedSymbols = item.getParsedSymbols();
+		if (symbols.size() <= itemParsedSymbols) {
+			continue;
+		}
+		std::string checkingSymbol = symbols[itemParsedSymbols];
+
+		if (desiredSymbol == checkingSymbol) {
+			EarleyItem newEarleyItem = EarleyItem(item.getVariable(), item.getSymbols(), item.getStart(), item.getParsedSymbols() + 1);
+			addEarleyItemIfDoesntExist(newEarleyItem, stateSetIndex);
+		}
+	}
 }
 
 void EarleyParser::createParseTree()
@@ -98,8 +119,16 @@ void EarleyParser::createParseTree()
 
 }
 
-void EarleyParser::addEarleyItemIfDoesntExist(EarleyItem item, std::vector<EarleyItem>& set)
+void EarleyParser::addEarleyItemIfDoesntExist(EarleyItem item, int stateSetIndex)
 {
+	// add the new state set if it doesn't exist
+	if (m_state.size() <= stateSetIndex) {
+		std::vector<EarleyItem> vector = { item };
+		m_state.emplace_back(vector);
+		return;
+	}
+
+	auto& set = m_state[stateSetIndex];
 	// don't add the item if it already exists in the state set
 	for (EarleyItem& setItem : set) {
 		if (item == setItem) {

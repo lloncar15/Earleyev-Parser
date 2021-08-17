@@ -20,7 +20,7 @@ private:
 	void createParseTree();
 
 	// helper functions
-	void addEarleyItemIfDoesntExist(EarleyItem item, std::vector<EarleyItem>& set);
+	void addEarleyItemIfDoesntExist(EarleyItem item, int stateSetIndex);
 	void printState();
 	void printStateSet(int i);
 
