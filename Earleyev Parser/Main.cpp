@@ -50,7 +50,22 @@ int main()
 
 	grammar.setStartVariable("Sum");
 
-	EarleyParser parser = EarleyParser();
+	EarleyParser parser = EarleyParser(grammar);
 	std::string input = "1+(2*3-4)";
-	parser.parse(grammar, input);
+	parser.parse(input);
+
+	Grammar grammar2 = Grammar();
+	grammar2.addVariable("A");
+	grammar2.addVariable("B");
+	grammar2.addSymbol("");
+
+	grammar2.addRule("A", { "" });
+	grammar2.addRule("A", { "B" });
+	grammar2.addRule("B", { "A" });
+
+	grammar2.setStartVariable("A");
+
+	EarleyParser parser2 = EarleyParser(grammar2);
+	std::string input2 = "";
+	// parser2.parse(input2);
 }

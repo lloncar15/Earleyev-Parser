@@ -23,6 +23,35 @@ void Grammar::addSymbol(std::string symbol)
 	m_symbols.emplace(symbol);
 }
 
+Rules Grammar::getRulesWithVariableInRHS(std::string symbol)
+{
+	Rules rules;
+
+	// add each rule which contains symbol to rules
+	for (auto& rulePair : m_rules) {
+		for (auto& symbolRHS : rulePair.second) {
+			if (symbol == symbolRHS) {
+				rules.emplace(rulePair);
+				continue;
+			}
+		}
+	}
+	return rules;
+}
+
+Rules Grammar::getEmptyRules()
+{
+	Rules rules;
+
+	// add each empty rule to rules
+	for (auto& rulePair : m_rules) {
+		if (rulePair.second.size() == 1 && rulePair.second[0] == "") {
+			rules.emplace(rulePair);
+		}
+	}
+	return rules;
+}
+
 bool Grammar::isStringVariable(std::string& string)
 {
 	return m_variables.find(string) != m_variables.end();

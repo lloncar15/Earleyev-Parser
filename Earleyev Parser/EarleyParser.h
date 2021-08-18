@@ -4,27 +4,33 @@
 #include "Grammar.h"
 
 #include <vector>
+#include <set>
 
 class EarleyParser
 {
 public:
-	EarleyParser();
+	EarleyParser(Grammar grammar);
 	~EarleyParser();
 
-	void parse(Grammar& grammar, std::string& input);
+	void parse(std::string& input);
 private:
-	void buildItems(Grammar& grammar);
-	void predict(std::vector<EarleyItem>& stateSet, int stateSetIndex, std::string& symbol, Grammar& grammar);
-	void scan(std::vector<EarleyItem>& stateSet, int stateSetIndex, int desiredStateSetIndex, std::string& symbol, std::string& input, Grammar& grammar);
-	void complete(std::vector<EarleyItem>& stateSet, int stateSetIndex, int desiredStateSetIndex, Grammar& grammar);
+	void buildItems();
+	void predict(std::vector<EarleyItem>& stateSet, int stateSetIndex, int desiredStateSetIndex, std::string& symbol);
+	void scan(std::vector<EarleyItem>& stateSet, int stateSetIndex, int desiredStateSetIndex, std::string& symbol, std::string& input);
+	void complete(std::vector<EarleyItem>& stateSet, int stateSetIndex, int desiredStateSetIndex);
 	void createParseTree();
+
+	void findNullableVariables();
 
 	// helper functions
 	void addEarleyItemIfDoesntExist(EarleyItem item, int stateSetIndex);
 	void printState();
 	void printStateSet(int i);
+	bool isVariableNullable(const std::string& variable);
 
 	std::vector<std::vector<EarleyItem>> m_state;
 	std::string m_input;
+	std::unordered_set<std::string> m_nullableVariables;
+	Grammar m_grammar;
 };
 
