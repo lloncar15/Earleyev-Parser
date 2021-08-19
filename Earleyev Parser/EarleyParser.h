@@ -18,15 +18,11 @@ private:
 	void predict(std::vector<EarleyItem>& stateSet, int stateSetIndex, int desiredStateSetIndex, std::string& symbol);
 	void scan(std::vector<EarleyItem>& stateSet, int stateSetIndex, int desiredStateSetIndex, std::string& symbol, std::string& input);
 	void complete(std::vector<EarleyItem>& stateSet, int stateSetIndex, int desiredStateSetIndex);
-	void createParseTree();
-
-	void findNullableVariables();
 
 	// helper functions
 	void addEarleyItemIfDoesntExist(EarleyItem item, int stateSetIndex);
 	void printState();
 	void printStateSet(int i);
-	bool isVariableNullable(const std::string& variable);
 
 	std::vector<std::vector<EarleyItem>> m_state;
 	std::string m_input;

@@ -20,11 +20,11 @@ public:
 
 	void printItem();
 private:
-	// represents where the EarleyItem begins, m_start = 0 means that it starts at the begining of the input string
-	int m_start = 0;
-	// represents where the dot is, how many symbols are parsed until now
-	int m_parsedSymbols = 0;
+	// start represents where the EarleyItem begins, m_start = 0 means that it starts at the begining of the input string
+	// parsedSymbols represents where the dot is, how many symbols are parsed until now
 
+	int m_start = 0;
+	int m_parsedSymbols = 0;
 	std::string m_variable;
 	std::vector<std::string> m_symbols;
 };
