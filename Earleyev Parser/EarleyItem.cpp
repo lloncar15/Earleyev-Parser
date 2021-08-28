@@ -19,7 +19,7 @@ bool EarleyItem::operator==(EarleyItem& b)
 	return equals;
 }
 
-void EarleyItem::printItem()
+void EarleyItem::printItem() const
 {
 	std::string outputString = m_variable + " -> ";
 	for (unsigned int i = 0; i < m_symbols.size(); ++i) {
@@ -34,4 +34,9 @@ void EarleyItem::printItem()
 	outputString += std::string(" (") + std::to_string(m_start) + ")";
 
 	std::cout << outputString << std::endl;
+}
+
+bool EarleyItem::isCompleted()
+{
+	return m_symbols.size() == m_parsedSymbols;
 }
