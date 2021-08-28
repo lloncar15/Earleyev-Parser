@@ -67,5 +67,21 @@ int main()
 
 	EarleyParser parser2 = EarleyParser(grammar2);
 	std::string input2 = "";
-	// parser2.parse(input2);
+	parser2.parse(input2);
+
+	Grammar grammar3 = Grammar();
+	grammar3.addVariable("S");
+	grammar3.addVariable("E");
+	grammar3.addSymbol("a");
+	grammar3.addSymbol("+");
+
+	grammar3.addRule("S", { "E" });
+	grammar3.addRule("E", { "E", "+", "E" });
+	grammar3.addRule("E", { "a" });
+
+	grammar3.setStartVariable("S");
+
+	EarleyParser parser3 = EarleyParser(grammar3);
+	std::string input3 = "a+a+a";
+	parser3.parse(input3);
 }
