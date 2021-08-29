@@ -23,7 +23,13 @@ void EarleyParser::parse(string& input)
 	finishRecogniser();
 	removeUncompletedItems();
 	printState(m_state);
-	m_parseTrees = createForest(m_state, m_input);
+
+	vector<vector<EarleyItem>> stateOrderedByStart = orderStateByStart(m_state);
+	printState(stateOrderedByStart);
+	ParseTree* tree = createTree(stateOrderedByStart, m_input, 0, m_input.size(), m_grammar.getStartVariable(), nullptr);
+	printTree(tree, "", true);
+
+	/*m_parseTrees = createForest(m_state, m_input);
 	for (auto it = m_parseTrees.begin(); it != m_parseTrees.end(); ) {
 		if ((*it)->m_end != m_input.size()) {
 			it = m_parseTrees.erase(it);
@@ -31,7 +37,7 @@ void EarleyParser::parse(string& input)
 		else {
 			++it;
 		}
-	}
+	}*/
 	printParseTrees();
 }
 
@@ -390,4 +396,69 @@ void EarleyParser::printTree(ParseTree* tree, string indent, bool isLast)
 	for (int i = 0; i < tree->m_children.size(); ++i) {
 		printTree(tree->m_children[i], indent, i == tree->m_children.size() - 1);
 	}
+}
+
+ParseTree* EarleyParser::createTree(const std::vector<std::vector<EarleyItem>>& state, const std::string& input, int start, int end, const std::string& token, ParseTree* parent)
+{
+	for (int i = 0; i < state[start].size(); ++i) {
+		EarleyItem item = state[start][i];
+		if (item.getVariable() != token) {
+			continue;
+		}
+
+		int itemEnd = item.getStart();
+		if (parent != 0 && itemEnd > parent->m_end) {
+			continue;
+		}
+
+		bool found = false;
+		for (ParseTree* tree = parent; tree != 0; tree = tree->m_parent) {
+			bool isSame = true;
+			isSame &= tree->m_variable == item.getVariable();
+			isSame &= tree->m_symbols == item.getSymbols();
+			isSame &= tree->m_start == start;
+			isSame &= tree->m_end == itemEnd;
+			if (isSame) {
+				found = true;
+				break;
+			}
+		}
+		if (found) {
+			continue;
+		}
+
+		ParseTree* tree = new ParseTree(parent, vector<ParseTree*>(), item, start, itemEnd, 0, token);
+
+		int numOfTokens = tree->m_symbols.size();
+		while (tree->m_children.size() < numOfTokens) {
+			int index = tree->m_children.size();
+
+			string inputChar;
+			if (!input.empty()) {
+				inputChar += input[start + tree->m_length];
+			}
+
+			if (tree->m_symbols[index] == inputChar) {
+				int charLength = inputChar.empty() ? 0 : 1;
+				ParseTree* leafTree = new ParseTree(tree, vector<ParseTree*>(), EarleyItem(), start + tree->m_length, start + tree->m_length + charLength, charLength, inputChar);
+				tree->m_children.push_back(leafTree);
+				tree->m_length += charLength;
+				continue;
+			}
+
+			ParseTree* child = createTree(state, input, start + tree->m_length, itemEnd, tree->m_symbols[index], tree);
+			if (child == nullptr) {
+				break;
+			}
+			else {
+				tree->m_length += child->m_length;
+				tree->m_children.push_back(child);
+			}
+		}
+
+		if (tree->m_children.size() == numOfTokens && tree->m_start + tree->m_length == tree->m_end) {
+			return tree;
+		}
+	}
+	return nullptr;
 }
