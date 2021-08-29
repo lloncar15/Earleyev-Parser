@@ -29,14 +29,9 @@ private:
 	bool isVariableNullable(const std::string& variable);
 
 	void removeUncompletedItems();
-	std::vector<std::vector<EarleyItem>> orderStateByStart(const std::vector<std::vector<EarleyItem>>& state);
-	std::vector<ParseTree*> createTrees(const std::vector<std::vector<EarleyItem>>& state, const std::string& input, int start, std::string token, ParseTree* parent, std::vector<ParseTree*>& memo);
-	std::vector<ParseTree*> createForest(const std::vector<std::vector<EarleyItem>>& state, const std::string& input);
+	std::vector<ParseTree*> createTrees(const std::vector<std::vector<EarleyItem>>& state, const std::string& input, std::unordered_set<ParseTree*>& cachedTrees, int end, std::string token, ParseTree* parent);
 	void printParseTrees();
 	void printTree(ParseTree* tree, std::string indent, bool isLast);
-
-	//test
-	ParseTree* createTree(const std::vector<std::vector<EarleyItem>>& state, const std::string& input, int start, int end, const std::string& token, ParseTree* parent);
 
 	std::vector<std::vector<EarleyItem>> m_state;
 	std::string m_input;

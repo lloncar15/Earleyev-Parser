@@ -23,21 +23,8 @@ void EarleyParser::parse(string& input)
 	finishRecogniser();
 	removeUncompletedItems();
 	printState(m_state);
-
-	vector<vector<EarleyItem>> stateOrderedByStart = orderStateByStart(m_state);
-	printState(stateOrderedByStart);
-	ParseTree* tree = createTree(stateOrderedByStart, m_input, 0, m_input.size(), m_grammar.getStartVariable(), nullptr);
-	printTree(tree, "", true);
-
-	/*m_parseTrees = createForest(m_state, m_input);
-	for (auto it = m_parseTrees.begin(); it != m_parseTrees.end(); ) {
-		if ((*it)->m_end != m_input.size()) {
-			it = m_parseTrees.erase(it);
-		}
-		else {
-			++it;
-		}
-	}*/
+	unordered_set<ParseTree*> cachedTrees;
+	m_parseTrees = createTrees(m_state, input, cachedTrees, input.size(), m_grammar.getStartVariable(), 0);
 	printParseTrees();
 }
 
@@ -253,39 +240,18 @@ void EarleyParser::removeUncompletedItems()
 	}
 }
 
-vector<vector<EarleyItem>> EarleyParser::orderStateByStart(const vector<vector<EarleyItem>>& state)
-{
-	vector<vector<EarleyItem>> newState(state.size());
-	for (int i = 0; i < state.size(); ++i) {
-		for (auto item : state[i]) {
-			EarleyItem newItem = EarleyItem(item.getVariable(), item.getSymbols(), i, item.getParsedSymbols());
-			newState[item.getStart()].emplace_back(newItem);
-		}
-	}
-	return newState;
-}
-
-vector<ParseTree*> EarleyParser::createForest(const vector<vector<EarleyItem>>& state, const string& input)
-{
-	vector<vector<EarleyItem>> stateOrderedByStart = orderStateByStart(m_state);
-	printState(stateOrderedByStart);
-
-	vector<ParseTree*> memo;
-	return createTrees(stateOrderedByStart, input, 0, m_grammar.getStartVariable(), 0, memo);
-}
-
-vector<ParseTree*> EarleyParser::createTrees(const vector<vector<EarleyItem>>& state, const string& input, int start, string token, ParseTree* parent, vector<ParseTree*>& memo)
+vector<ParseTree*> EarleyParser::createTrees(const vector<vector<EarleyItem>>& state, const string& input, unordered_set<ParseTree*>& cachedTrees, int end, string token, ParseTree* parent)
 {
 	vector<ParseTree*> returnTrees;
-	for (int i = 0; i < state[start].size(); i++) {
+	for (int i = 0; i < state[end].size(); ++i) {
 		vector<ParseTree*> possibleTrees;
-		EarleyItem item = state[start][i];
+		EarleyItem item = state[end][i];
 		if (item.getVariable() != token) {
 			continue;
 		}
 
-		int itemEnd = item.getStart();
-		if (parent != 0 && itemEnd > parent->m_end) {
+		int itemStart = item.getStart();
+		if (parent != 0 && itemStart < parent->m_start) {
 			continue;
 		}
 
@@ -294,8 +260,8 @@ vector<ParseTree*> EarleyParser::createTrees(const vector<vector<EarleyItem>>& s
 			bool isSame = true;
 			isSame &= tree->m_variable == item.getVariable();
 			isSame &= tree->m_symbols == item.getSymbols();
-			isSame &= tree->m_start == start;
-			isSame &= tree->m_end == itemEnd;
+			isSame &= tree->m_start == itemStart;
+			isSame &= tree->m_end == end;
 			if (isSame) {
 				found = true;
 				break;
@@ -306,14 +272,13 @@ vector<ParseTree*> EarleyParser::createTrees(const vector<vector<EarleyItem>>& s
 		}
 
 		found = false;
-		for (int j = 0; j < memo.size(); ++j) {
-			ParseTree* tree = memo[j];
 
+		for (ParseTree* tree : cachedTrees) {
 			bool isSame = true;
 			isSame &= tree->m_variable == item.getVariable();
 			isSame &= tree->m_symbols == item.getSymbols();
-			isSame &= tree->m_start == start;
-			isSame &= tree->m_end == itemEnd;
+			isSame &= tree->m_start == itemStart;
+			isSame &= tree->m_end == end;
 			if (isSame) {
 				returnTrees.push_back(tree);
 				found = true;
@@ -323,7 +288,7 @@ vector<ParseTree*> EarleyParser::createTrees(const vector<vector<EarleyItem>>& s
 			continue;
 		}
 
-		ParseTree* tree = new ParseTree(parent, vector<ParseTree*>(), item, start, itemEnd, 0, token);
+		ParseTree* tree = new ParseTree(parent, vector<ParseTree*>(), item, itemStart, end, 0, token);
 		possibleTrees.push_back(tree);
 
 		for (int j = 0; j < possibleTrees.size(); ++j) {
@@ -331,21 +296,21 @@ vector<ParseTree*> EarleyParser::createTrees(const vector<vector<EarleyItem>>& s
 
 			int numOfTokens = tree->m_symbols.size();
 			while (tree->m_children.size() < numOfTokens) {
-				int index = tree->m_children.size();
+				int index = numOfTokens - tree->m_children.size() - 1;
 
 				string inputChar;
 				if (!input.empty()) {
-					inputChar += input[start + tree->m_length];
+					inputChar += input[end - tree->m_length - 1];
 				}
 				if (tree->m_symbols[index] == inputChar) {
 					int charLength = inputChar.empty() ? 0 : 1;
-					ParseTree* leafTree = new ParseTree(tree, vector<ParseTree*>(), EarleyItem(), start + tree->m_length, start + tree->m_length + charLength, charLength, inputChar);
-					tree->m_children.push_back(leafTree);
+					ParseTree* leafTree = new ParseTree(tree, vector<ParseTree*>(), EarleyItem(), itemStart, itemStart + charLength, charLength, inputChar);
+					tree->m_children.insert(tree->m_children.begin(), leafTree);
 					tree->m_length += charLength;
 					continue;
 				}
 
-				vector<ParseTree*> children = createTrees(state, input, start + tree->m_length, tree->m_symbols[index], tree, memo);
+				vector<ParseTree*> children = createTrees(state, input, cachedTrees, end - tree->m_length, tree->m_symbols[index], tree);
 
 				if (children.size() == 0) {
 					break;
@@ -354,12 +319,12 @@ vector<ParseTree*> EarleyParser::createTrees(const vector<vector<EarleyItem>>& s
 					ParseTree* child = children[0];
 					int length = tree->m_length;
 					tree->m_length += child->m_length;
-					tree->m_children.push_back(child);
+					tree->m_children.insert(tree->m_children.begin(), child);
 
-					for (int k = 1; k < children.size(); k++) {
+					for (int k = 1; k < children.size(); ++k) {
 						child = children[k];
 						ParseTree* newTree = new ParseTree(tree->m_parent, tree->m_children, item, tree->m_start, tree->m_end, length + child->m_length, tree->m_data);
-						newTree->m_children.back() = child;
+						newTree->m_children.front() = child;
 						possibleTrees.push_back(newTree);
 					}
 				}
@@ -367,7 +332,7 @@ vector<ParseTree*> EarleyParser::createTrees(const vector<vector<EarleyItem>>& s
 
 			if (tree->m_children.size() == numOfTokens && tree->m_start + tree->m_length == tree->m_end) {
 				returnTrees.push_back(tree);
-				memo.push_back(tree);
+				cachedTrees.insert(tree);
 			}
 		}
 	}
@@ -396,69 +361,4 @@ void EarleyParser::printTree(ParseTree* tree, string indent, bool isLast)
 	for (int i = 0; i < tree->m_children.size(); ++i) {
 		printTree(tree->m_children[i], indent, i == tree->m_children.size() - 1);
 	}
-}
-
-ParseTree* EarleyParser::createTree(const std::vector<std::vector<EarleyItem>>& state, const std::string& input, int start, int end, const std::string& token, ParseTree* parent)
-{
-	for (int i = 0; i < state[start].size(); ++i) {
-		EarleyItem item = state[start][i];
-		if (item.getVariable() != token) {
-			continue;
-		}
-
-		int itemEnd = item.getStart();
-		if (parent != 0 && itemEnd > parent->m_end) {
-			continue;
-		}
-
-		bool found = false;
-		for (ParseTree* tree = parent; tree != 0; tree = tree->m_parent) {
-			bool isSame = true;
-			isSame &= tree->m_variable == item.getVariable();
-			isSame &= tree->m_symbols == item.getSymbols();
-			isSame &= tree->m_start == start;
-			isSame &= tree->m_end == itemEnd;
-			if (isSame) {
-				found = true;
-				break;
-			}
-		}
-		if (found) {
-			continue;
-		}
-
-		ParseTree* tree = new ParseTree(parent, vector<ParseTree*>(), item, start, itemEnd, 0, token);
-
-		int numOfTokens = tree->m_symbols.size();
-		while (tree->m_children.size() < numOfTokens) {
-			int index = tree->m_children.size();
-
-			string inputChar;
-			if (!input.empty()) {
-				inputChar += input[start + tree->m_length];
-			}
-
-			if (tree->m_symbols[index] == inputChar) {
-				int charLength = inputChar.empty() ? 0 : 1;
-				ParseTree* leafTree = new ParseTree(tree, vector<ParseTree*>(), EarleyItem(), start + tree->m_length, start + tree->m_length + charLength, charLength, inputChar);
-				tree->m_children.push_back(leafTree);
-				tree->m_length += charLength;
-				continue;
-			}
-
-			ParseTree* child = createTree(state, input, start + tree->m_length, itemEnd, tree->m_symbols[index], tree);
-			if (child == nullptr) {
-				break;
-			}
-			else {
-				tree->m_length += child->m_length;
-				tree->m_children.push_back(child);
-			}
-		}
-
-		if (tree->m_children.size() == numOfTokens && tree->m_start + tree->m_length == tree->m_end) {
-			return tree;
-		}
-	}
-	return nullptr;
 }
