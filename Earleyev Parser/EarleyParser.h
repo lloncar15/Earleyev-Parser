@@ -35,6 +35,9 @@ private:
 	void printParseTrees();
 	void printTree(ParseTree* tree, std::string indent, bool isLast);
 
+	//test
+	ParseTree* createTree(const std::vector<std::vector<EarleyItem>>& state, const std::string& input, int start, int end, const std::string& token, ParseTree* parent);
+
 	std::vector<std::vector<EarleyItem>> m_state;
 	std::string m_input;
 	Grammar m_grammar;
