@@ -23,9 +23,12 @@ void EarleyParser::parse(string& input)
 	finishRecogniser();
 	removeUncompletedItems();
 	printState(m_state);
-	unordered_set<ParseTree*> cachedTrees;
+	auto orderedState = orderStateByStart(m_state);
+	auto tree = createTree(orderedState, m_input, 0, m_grammar.getStartVariable(), nullptr);
+	printTree(tree, "", true);
+	/*unordered_set<ParseTree*> cachedTrees;
 	m_parseTrees = createTrees(m_state, input, cachedTrees, input.size(), m_grammar.getStartVariable(), 0);
-	printParseTrees();
+	printParseTrees();*/
 }
 
 // __________ RECOGNISER __________
@@ -428,4 +431,16 @@ ParseTree* EarleyParser::createTree(const std::vector<std::vector<EarleyItem>>& 
 		return tree;
 	}
 	return tree;
+}
+
+vector<vector<EarleyItem>> EarleyParser::orderStateByStart(const vector<vector<EarleyItem>>& state)
+{
+	vector<vector<EarleyItem>> newState(state.size());
+	for (int i = 0; i < state.size(); ++i) {
+		for (auto item : state[i]) {
+			EarleyItem newItem = EarleyItem(item.getVariable(), item.getSymbols(), i, item.getParsedSymbols());
+			newState[item.getStart()].emplace_back(newItem);
+		}
+	}
+	return newState;
 }

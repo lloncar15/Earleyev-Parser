@@ -34,6 +34,7 @@ private:
 	void printTree(ParseTree* tree, std::string indent, bool isLast);
 
 	ParseTree* createTree(const std::vector<std::vector<EarleyItem>>& state, const std::string& input, int start, const std::string& token, ParseTree* parent);
+	std::vector<std::vector<EarleyItem>> orderStateByStart(const std::vector<std::vector<EarleyItem>>& state);
 
 	std::vector<std::vector<EarleyItem>> m_state;
 	std::string m_input;
