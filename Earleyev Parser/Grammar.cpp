@@ -1,5 +1,7 @@
 #include "Grammar.h"
 
+using namespace std;
+
 Grammar::Grammar() {
 
 }
@@ -8,32 +10,32 @@ Grammar::~Grammar() {
 
 }
 
-void Grammar::addRule(std::string leftHandVariable, std::vector<std::string> rightHandSymbols)
+void Grammar::addRule(string leftHandVariable, vector<string> rightHandSymbols)
 {
 	m_rules.emplace(leftHandVariable, rightHandSymbols);
 }
 
-void Grammar::addVariable(std::string variable)
+void Grammar::addVariable(string variable)
 {
 	m_variables.emplace(variable);
 }
 
-void Grammar::addSymbol(std::string symbol)
+void Grammar::addSymbol(string symbol)
 {
 	m_symbols.emplace(symbol);
 }
 
-bool Grammar::isStringVariable(std::string& string)
+bool Grammar::isStringVariable(string& string)
 {
 	return m_variables.find(string) != m_variables.end();
 }
 
-bool Grammar::isStringSymbol(std::string& string)
+bool Grammar::isStringSymbol(string& string)
 {
 	return  m_symbols.find(string) != m_symbols.end();
 }
 
-Rules Grammar::getRulesWithVariableInRHS(std::string symbol)
+Rules Grammar::getRulesWithVariableInRHS(string symbol)
 {
 	Rules rules;
 

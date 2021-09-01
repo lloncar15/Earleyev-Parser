@@ -3,7 +3,9 @@
 #include <string>
 #include <iostream>
 
-EarleyItem::EarleyItem(std::string variable, std::vector<std::string> symbols, int start, int parsedSymbols) : m_variable(variable), m_symbols(symbols), m_start(start), m_parsedSymbols(parsedSymbols)
+using namespace std;
+
+EarleyItem::EarleyItem(string variable, vector<string> symbols, int start, int parsedSymbols) : m_variable(variable), m_symbols(symbols), m_start(start), m_parsedSymbols(parsedSymbols)
 {
 }
 
@@ -21,7 +23,7 @@ bool EarleyItem::operator==(EarleyItem& b)
 
 void EarleyItem::printItem() const
 {
-	std::string outputString = m_variable + " -> ";
+	string outputString = m_variable + " -> ";
 	for (unsigned int i = 0; i < m_symbols.size(); ++i) {
 		if (m_parsedSymbols == i) {
 			outputString += " . ";
@@ -31,9 +33,9 @@ void EarleyItem::printItem() const
 	if (m_parsedSymbols == m_symbols.size()) {
 		outputString += " . ";
 	}
-	outputString += std::string(" (") + std::to_string(m_start) + ")";
+	outputString += string(" (") + to_string(m_start) + ")";
 
-	std::cout << outputString << std::endl;
+	cout << outputString << endl;
 }
 
 bool EarleyItem::isCompleted()

@@ -20,15 +20,13 @@ void EarleyParser::parse(string& input)
 	findNullableVariables();
 	buildItems();
 	printState(m_state);
-	finishRecogniser();
-	removeUncompletedItems();
+	finishBuilding();
+	removeIncompleteItems();
 	printState(m_state);
 	auto orderedState = orderStateByStart(m_state);
 	auto tree = createTree(orderedState, m_input, 0, m_grammar.getStartVariable(), nullptr);
 	printTree(tree, "", true);
-	/*unordered_set<ParseTree*> cachedTrees;
-	m_parseTrees = createTrees(m_state, input, cachedTrees, input.size(), m_grammar.getStartVariable(), 0);
-	printParseTrees();*/
+	cin.get();
 }
 
 // __________ RECOGNISER __________
@@ -38,7 +36,7 @@ void EarleyParser::buildItems()
 	string startVariable = m_grammar.getStartVariable();
 	for (auto& rule : m_grammar.getRules()) {
 		if (rule.first == startVariable) {
-			addEarleyItemIfDoesntExist(EarleyItem(startVariable, rule.second, 0, 0), 0);
+			addEarleyItem(EarleyItem(startVariable, rule.second, 0, 0), 0);
 		}
 	}
 
@@ -61,6 +59,7 @@ void EarleyParser::buildItems()
 					scan(tempStateSet, i, j, nextSymbol, m_input);
 				}
 				else {
+					cerr << "Illegal rule!" << endl;
 					exit(1);
 				}
 			}
@@ -72,9 +71,9 @@ void EarleyParser::predict(vector<EarleyItem>& stateSet, int stateSetIndex, int 
 {
 	for (auto& rule : m_grammar.getRules()) {
 		if (symbol == rule.first) {
-			addEarleyItemIfDoesntExist(EarleyItem(symbol, rule.second, stateSetIndex, 0), stateSetIndex);
+			addEarleyItem(EarleyItem(symbol, rule.second, stateSetIndex, 0), stateSetIndex);
 			if (isVariableNullable(symbol)) {
-				addEarleyItemIfDoesntExist(EarleyItem(symbol, rule.second, stateSetIndex, stateSet[desiredStateSetIndex].getParsedSymbols() + 1), stateSetIndex);
+				addEarleyItem(EarleyItem(symbol, rule.second, stateSetIndex, stateSet[desiredStateSetIndex].getParsedSymbols() + 1), stateSetIndex);
 			}
 		}
 	}
@@ -94,7 +93,7 @@ void EarleyParser::scan(vector<EarleyItem>& stateSet, int stateSetIndex, int des
 
 		EarleyItem tempItem = stateSet[desiredStateSetIndex];
 		EarleyItem item = EarleyItem(tempItem.getVariable(), tempItem.getSymbols(), tempItem.getStart(), tempItem.getParsedSymbols() + 1);
-		addEarleyItemIfDoesntExist(item, stateSetIndex + 1);
+		addEarleyItem(item, stateSetIndex + 1);
 	}
 }
 
@@ -114,12 +113,12 @@ void EarleyParser::complete(vector<EarleyItem>& stateSet, int stateSetIndex, int
 
 		if (desiredSymbol == checkingSymbol) {
 			EarleyItem newEarleyItem = EarleyItem(item.getVariable(), item.getSymbols(), item.getStart(), item.getParsedSymbols() + 1);
-			addEarleyItemIfDoesntExist(newEarleyItem, stateSetIndex);
+			addEarleyItem(newEarleyItem, stateSetIndex);
 		}
 	}
 }
 
-void EarleyParser::addEarleyItemIfDoesntExist(EarleyItem item, int stateSetIndex)
+void EarleyParser::addEarleyItem(EarleyItem item, int stateSetIndex)
 {
 	if (m_state.size() <= stateSetIndex) {
 		vector<EarleyItem> vector = { item };
@@ -153,10 +152,11 @@ void EarleyParser::printStateSet(const vector<EarleyItem>& set, int i)
 	}
 }
 
-void EarleyParser::finishRecogniser()
+void EarleyParser::finishBuilding()
 {
 	int inputSize = m_input.size();
 	if (m_state.size() - 1 != inputSize) {
+		cerr << "Invalid parse! Number of states doesn't match the input!" << endl;
 		exit(1);
 	}
 	else {
@@ -173,6 +173,7 @@ void EarleyParser::finishRecogniser()
 			}
 		}
 		if (!isFinished) {
+			cerr << "Invalid parse! No completed item matches the conditions!" << endl;
 			exit(1);
 		}
 	}
@@ -228,7 +229,7 @@ bool EarleyParser::isVariableNullable(const string& symbol)
 
 // __________ PARSER __________
 
-void EarleyParser::removeUncompletedItems()
+void EarleyParser::removeIncompleteItems()
 {
 	for (auto& set : m_state) {
 		auto it = set.begin();
@@ -315,7 +316,7 @@ vector<ParseTree*> EarleyParser::createTrees(const vector<vector<EarleyItem>>& s
 
 				vector<ParseTree*> children = createTrees(state, input, cachedTrees, end - tree->m_length, tree->m_symbols[index], tree);
 
-				if (children.size() == 0) {
+				if (children.empty()) {
 					break;
 				}
 				else {
@@ -366,7 +367,7 @@ void EarleyParser::printTree(ParseTree* tree, string indent, bool isLast)
 	}
 }
 
-ParseTree* EarleyParser::createTree(const std::vector<std::vector<EarleyItem>>& state, const std::string& input, int start, const std::string& token, ParseTree* parent)
+ParseTree* EarleyParser::createTree(const vector<vector<EarleyItem>>& state, const string& input, int start, const string& token, ParseTree* parent)
 {
 	EarleyItem chosenItem;
 	ParseTree* tree = nullptr;
@@ -384,12 +385,7 @@ ParseTree* EarleyParser::createTree(const std::vector<std::vector<EarleyItem>>& 
 
 		bool found = false;
 		for (ParseTree* tree = parent; tree != 0; tree = tree->m_parent) {
-			bool isSame = true;
-			isSame &= tree->m_variable == chosenItem.getVariable();
-			isSame &= tree->m_symbols == chosenItem.getSymbols();
-			isSame &= tree->m_start == start;
-			isSame &= tree->m_end == itemEnd;
-			if (isSame) {
+			if (tree->isMatchingItem(chosenItem, start)) {
 				found = true;
 				break;
 			}

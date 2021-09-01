@@ -51,7 +51,7 @@ int main()
 	grammar.setStartVariable("Sum");
 
 	EarleyParser parser = EarleyParser(grammar);
-	std::string input = "1+(2*3-4)";
+	string input = "1+(2*3-4)";
 	parser.parse(input);
 
 	Grammar grammar2 = Grammar();
@@ -66,7 +66,7 @@ int main()
 	grammar2.setStartVariable("A");
 
 	EarleyParser parser2 = EarleyParser(grammar2);
-	std::string input2 = "";
+	string input2 = "";
 	parser2.parse(input2);
 
 	Grammar grammar3 = Grammar();
@@ -82,6 +82,6 @@ int main()
 	grammar3.setStartVariable("S");
 
 	EarleyParser parser3 = EarleyParser(grammar3);
-	std::string input3 = "a+a+a";
+	string input3 = "a+a+a";
 	parser3.parse(input3);
 }

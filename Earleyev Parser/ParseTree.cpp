@@ -11,43 +11,14 @@ ParseTree::ParseTree(ParseTree* parent, const vector<ParseTree*> children, Earle
 	m_symbols = earleyItem.getSymbols();
 }
 
-void ParseTree::printParseTree(ParseTree* tree)
+bool ParseTree::isMatchingItem(EarleyItem item, int start)
 {
-	if (tree == nullptr) {
-		return;
-	}
-	cout << endl;
-	printSubTree(tree, "");
-	cout << endl;
-}
-
-void ParseTree::printSubTree(ParseTree* tree, const string& prefix)
-{
-	if (tree == nullptr) {
-		return;
-	}
-	bool hasChild = !tree->m_children.empty();
-	int childrenCount = tree->m_children.size();
-	bool hasChildren = childrenCount > 1;
-
-	if (!hasChild) {
-		return;
-	}
-
-	bool counter = 0;
-	for (int i = 0; i < childrenCount; ++i) {
-		cout << prefix;
-		string newPrefix = prefix;
-
-		if (counter == childrenCount - 1) {
-			cout << "└── ";
-		}
-		else {
-			cout << "├── ";
-		}
-
-		printSubTree(tree->m_children[i], newPrefix);
-	}
+	bool isSame = true;
+	isSame &= m_variable == item.getVariable();
+	isSame &= m_symbols == item.getSymbols();
+	isSame &= m_start == start;
+	isSame &= m_end == item.getStart();
+	return isSame;
 }
 
 /* Primjer ispisa stabla parsiranja za 1+(2*3-4)

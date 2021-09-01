@@ -4,21 +4,23 @@
 
 #include <vector>
 
+using namespace std;
+
 class ParseTree
 {
 public:
-	ParseTree(ParseTree* parent, const std::vector<ParseTree*> children, EarleyItem earleyItem, int start, int end, int length, std::string data);
+	ParseTree(ParseTree* parent, const vector<ParseTree*> children, EarleyItem earleyItem, int start, int end, int length, string data);
+	~ParseTree() {};
 
-	void printParseTree(ParseTree* tree);
-	void printSubTree(ParseTree* tree, const std::string& prefix);
+	bool isMatchingItem(EarleyItem item, int start);
 
 	ParseTree* m_parent;
-	std::vector<ParseTree*> m_children;
-	std::string m_variable;
-	std::vector<std::string> m_symbols;
+	vector<ParseTree*> m_children;
+	string m_variable;
+	vector<string> m_symbols;
 	int m_start = 0;
 	int m_end = 0;
 	int m_length = 0;
-	std::string m_data;
+	string m_data;
 };
 

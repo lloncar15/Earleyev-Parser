@@ -7,41 +7,43 @@
 #include <vector>
 #include <set>
 
+using namespace std;
+
 class EarleyParser
 {
 public:
 	EarleyParser(Grammar grammar);
 	~EarleyParser();
 
-	void parse(std::string& input);
+	void parse(string& input);
 private:
 	void buildItems();
-	void predict(std::vector<EarleyItem>& stateSet, int stateSetIndex, int desiredStateSetIndex, std::string& symbol);
-	void scan(std::vector<EarleyItem>& stateSet, int stateSetIndex, int desiredStateSetIndex, std::string& symbol, std::string& input);
-	void complete(std::vector<EarleyItem>& stateSet, int stateSetIndex, int desiredStateSetIndex);
-	void finishRecogniser();
+	void predict(vector<EarleyItem>& stateSet, int stateSetIndex, int desiredStateSetIndex, string& symbol);
+	void scan(vector<EarleyItem>& stateSet, int stateSetIndex, int desiredStateSetIndex, string& symbol, string& input);
+	void complete(vector<EarleyItem>& stateSet, int stateSetIndex, int desiredStateSetIndex);
+	void finishBuilding();
 
-	void addEarleyItemIfDoesntExist(EarleyItem item, int stateSetIndex);
-	void printState(const std::vector<std::vector<EarleyItem>>& state);
-	void printStateSet(const std::vector<EarleyItem>& set, int i);
+	void addEarleyItem(EarleyItem item, int stateSetIndex);
+	void printState(const vector<vector<EarleyItem>>& state);
+	void printStateSet(const vector<EarleyItem>& set, int i);
 
 	void findNullableVariables();
-	bool isVariableNullable(const std::string& variable);
+	bool isVariableNullable(const string& variable);
 
-	void removeUncompletedItems();
-	std::vector<ParseTree*> createTrees(const std::vector<std::vector<EarleyItem>>& state, const std::string& input, std::unordered_set<ParseTree*>& cachedTrees, int end, std::string token, ParseTree* parent);
+	void removeIncompleteItems();
+	vector<ParseTree*> createTrees(const vector<vector<EarleyItem>>& state, const string& input, unordered_set<ParseTree*>& cachedTrees, int end, string token, ParseTree* parent);
 	void printParseTrees();
-	void printTree(ParseTree* tree, std::string indent, bool isLast);
+	void printTree(ParseTree* tree, string indent, bool isLast);
 
-	ParseTree* createTree(const std::vector<std::vector<EarleyItem>>& state, const std::string& input, int start, const std::string& token, ParseTree* parent);
-	std::vector<std::vector<EarleyItem>> orderStateByStart(const std::vector<std::vector<EarleyItem>>& state);
+	ParseTree* createTree(const vector<vector<EarleyItem>>& state, const string& input, int start, const string& token, ParseTree* parent);
+	vector<vector<EarleyItem>> orderStateByStart(const vector<vector<EarleyItem>>& state);
 
-	std::vector<std::vector<EarleyItem>> m_state;
-	std::string m_input;
+	vector<vector<EarleyItem>> m_state;
+	string m_input;
 	Grammar m_grammar;
 
-	std::unordered_set<std::string> m_nullableVariables;
+	unordered_set<string> m_nullableVariables;
 
-	std::vector<ParseTree*> m_parseTrees;
+	vector<ParseTree*> m_parseTrees;
 };
 
