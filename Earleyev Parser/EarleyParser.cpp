@@ -5,9 +5,11 @@
 
 using namespace std;
 
-EarleyParser::EarleyParser(Grammar grammar) : m_grammar(grammar)
+EarleyParser::EarleyParser(Grammar grammar, string input) : m_grammar(grammar), m_input(input)
 {
-	m_state = { {} };
+	for (int i = 0; i <= m_input.size(); ++i) {
+		m_state.emplace_back(vector<EarleyItem>());
+	}
 }
 
 EarleyParser::~EarleyParser()
@@ -16,7 +18,6 @@ EarleyParser::~EarleyParser()
 
 void EarleyParser::parse(string& input)
 {
-	m_input = input;
 	findNullableVariables();
 	buildItems();
 	printState(m_state);
@@ -43,11 +44,10 @@ void EarleyParser::buildItems()
 	for (int i = 0; i < m_state.size(); ++i) {
 		auto& tempStateSet = m_state[i];
 		for (int j = 0; j < tempStateSet.size(); ++j) {
-			auto& tempEarleyItem = tempStateSet[j];
-			int dotIndex = tempEarleyItem.getParsedSymbols();
-			auto& tempSymbols = tempEarleyItem.getSymbols();
+			int dotIndex = tempStateSet[j].getParsedSymbols();
+			auto tempSymbols = tempStateSet[j].getSymbols();
 
-			if (tempEarleyItem.isCompleted()) {
+			if (tempStateSet[j].isCompleted()) {
 				complete(tempStateSet, i, j);
 			}
 			else {
@@ -155,7 +155,7 @@ void EarleyParser::printStateSet(const vector<EarleyItem>& set, int i)
 void EarleyParser::finishBuilding()
 {
 	int inputSize = m_input.size();
-	if (m_state.size() - 1 != inputSize) {
+	if (m_state[inputSize].empty()) {
 		cerr << "Invalid parse! Number of states doesn't match the input!" << endl;
 		exit(1);
 	}

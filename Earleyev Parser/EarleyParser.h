@@ -12,7 +12,7 @@ using namespace std;
 class EarleyParser
 {
 public:
-	EarleyParser(Grammar grammar);
+	EarleyParser(Grammar grammar, string input);
 	~EarleyParser();
 
 	void parse(string& input);
