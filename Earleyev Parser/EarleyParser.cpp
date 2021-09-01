@@ -120,12 +120,6 @@ void EarleyParser::complete(vector<EarleyItem>& stateSet, int stateSetIndex, int
 
 void EarleyParser::addEarleyItem(EarleyItem item, int stateSetIndex)
 {
-	if (m_state.size() <= stateSetIndex) {
-		vector<EarleyItem> vector = { item };
-		m_state.emplace_back(vector);
-		return;
-	}
-
 	auto& set = m_state[stateSetIndex];
 	for (EarleyItem& setItem : set) {
 		if (item == setItem) {
