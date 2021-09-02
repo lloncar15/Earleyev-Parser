@@ -52,7 +52,7 @@ int main()
 
 	string input = "1+(2*3-4)";
 	EarleyParser parser = EarleyParser(grammar, input);
-	parser.parse(input);
+	parser.parse();
 
 	Grammar grammar2 = Grammar();
 	grammar2.addVariable("A");
@@ -67,7 +67,7 @@ int main()
 
 	string input2 = "";
 	EarleyParser parser2 = EarleyParser(grammar2, input2);
-	parser2.parse(input2);
+	parser2.parse();
 
 	Grammar grammar3 = Grammar();
 	grammar3.addVariable("S");
@@ -83,5 +83,5 @@ int main()
 
 	string input3 = "a+a+a";
 	EarleyParser parser3 = EarleyParser(grammar3, input3);
-	parser3.parse(input3);
+	parser3.parse();
 }

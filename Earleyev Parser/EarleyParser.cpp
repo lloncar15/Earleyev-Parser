@@ -5,7 +5,8 @@
 
 using namespace std;
 
-EarleyParser::EarleyParser(Grammar grammar, string input) : m_grammar(grammar), m_input(input)
+EarleyParser::EarleyParser(Grammar grammar, string input) : 
+	m_grammar(grammar), m_input(input)
 {
 	for (int i = 0; i <= m_input.size(); ++i) {
 		m_state.emplace_back(vector<EarleyItem>());
@@ -16,21 +17,21 @@ EarleyParser::~EarleyParser()
 {
 }
 
-void EarleyParser::parse(string& input)
+void EarleyParser::parse()
 {
 	findNullableVariables();
 	buildItems();
 	printState(m_state);
 	finishBuilding();
 	removeIncompleteItems();
-	printState(m_state);
 	auto orderedState = orderStateByStart(m_state);
+	printState(orderedState);
 	auto tree = createTree(orderedState, m_input, 0, m_grammar.getStartVariable(), nullptr);
 	printTree(tree, "", true);
 	cin.get();
 }
 
-// __________ RECOGNISER __________
+// __________ STATE CONSTRUCTION __________
 
 void EarleyParser::buildItems()
 {
@@ -112,7 +113,8 @@ void EarleyParser::complete(vector<EarleyItem>& stateSet, int stateSetIndex, int
 		string checkingSymbol = symbols[itemParsedSymbols];
 
 		if (desiredSymbol == checkingSymbol) {
-			EarleyItem newEarleyItem = EarleyItem(item.getVariable(), item.getSymbols(), item.getStart(), item.getParsedSymbols() + 1);
+			EarleyItem newEarleyItem = EarleyItem(item.getVariable(),
+				item.getSymbols(), item.getStart(), item.getParsedSymbols() + 1);
 			addEarleyItem(newEarleyItem, stateSetIndex);
 		}
 	}
@@ -221,7 +223,7 @@ bool EarleyParser::isVariableNullable(const string& symbol)
 	return m_nullableVariables.find(symbol) != m_nullableVariables.end();
 }
 
-// __________ PARSER __________
+// __________ TREE CONSTRUCTION __________
 
 void EarleyParser::removeIncompleteItems()
 {
@@ -390,8 +392,8 @@ ParseTree* EarleyParser::createTree(const vector<vector<EarleyItem>>& state, con
 
 		tree = new ParseTree(parent, vector<ParseTree*>(), chosenItem, start, itemEnd, 0, token);
 
-		int numOfTokens = tree->m_symbols.size();
-		while (tree->m_children.size() < numOfTokens) {
+		int numOfSymbols = tree->m_symbols.size();
+		while (tree->m_children.size() < numOfSymbols) {
 			int index = tree->m_children.size();
 
 			string inputChar;
@@ -416,9 +418,6 @@ ParseTree* EarleyParser::createTree(const vector<vector<EarleyItem>>& state, con
 				tree->m_children.push_back(child);
 			}
 		}
-	}
-	if (tree != nullptr && tree->m_children.size() == chosenItem.getSymbols().size() && tree->m_start + tree->m_length == tree->m_end) {
-		return tree;
 	}
 	return tree;
 }

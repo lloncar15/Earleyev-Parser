@@ -15,7 +15,7 @@ public:
 	EarleyParser(Grammar grammar, string input);
 	~EarleyParser();
 
-	void parse(string& input);
+	void parse();
 private:
 	void buildItems();
 	void predict(vector<EarleyItem>& stateSet, int stateSetIndex, int desiredStateSetIndex, string& symbol);

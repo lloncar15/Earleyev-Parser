@@ -32,21 +32,21 @@ bool ParseTree::isMatchingItem(EarleyItem item, int start)
    +- Product
       +- Factor
 	     +- (
-		 +- Sum
-		 |  +- Sum
-		 |  |  +- Product
-		 |  |     +- Product
-		 |  |     |  +- Factor
-		 |  |     |     +- Number
-		 |  |     |        +- 2
-		 |  |     +- *
-		 |  |     +- Factor
-		 |  |        +- Number
-		 |  |           +- 3
-		 |  +- -
-		 |  +- Product
-		 |     +- Factor
-		 |        +- Number
-		 |           +- 4
-		 +- )
+	     +- Sum
+	     |  +- Sum
+	     |  |  +- Product
+	     |  |     +- Product
+	     |  |     |  +- Factor
+	     |  |     |     +- Number
+	     |  |     |        +- 2
+	     |  |     +- *
+	     |  |     +- Factor
+	     |  |        +- Number
+	     |  |           +- 3
+	     |  +- -
+	     |  +- Product
+	     |     +- Factor
+	     |        +- Number
+	     |           +- 4
+	     +- )
 */
